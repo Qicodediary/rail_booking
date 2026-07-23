@@ -5,3 +5,6 @@ obj/
 *.user
 *.suo
 appsettings.*.local.json
+.DS_Store
+.DS_Store
+dotnet-install.sh
