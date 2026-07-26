@@ -30,7 +30,8 @@ public record CreateBookingRequest(
     DateOnly TravelDate,
     string PassengerName,
     int PassengerCount,
-    bool HasRailcard);
+    bool HasRailcard,
+    int InfantCount=0);
 
 public record BookingDto(
     string Reference,

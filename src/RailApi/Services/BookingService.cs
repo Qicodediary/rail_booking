@@ -56,7 +56,7 @@ public class BookingService(
             throw new BookingException($"Only {seatsRemaining} seat(s) left on this service.");
 
         var fare = fares.Calculate(
-            service.BaseFare, departureAt, now, request.PassengerCount, request.HasRailcard);
+            service.BaseFare, departureAt, now, request.PassengerCount, request.HasRailcard,request.InfantCount);
 
         var booking = new Booking
         {
