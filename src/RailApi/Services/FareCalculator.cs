@@ -10,7 +10,8 @@ public interface IFareCalculator
         DateTime departureAt,
         DateTime bookedAt,
         int passengerCount,
-        bool hasRailcard);
+        bool hasRailcard,
+        int infantCount = 0);
 }
 
 /// <summary>
@@ -35,7 +36,8 @@ public class FareCalculator : IFareCalculator
         DateTime departureAt,
         DateTime bookedAt,
         int passengerCount,
-        bool hasRailcard)
+        bool hasRailcard,
+        int infantCount = 0)
     {
         if (baseFare < 0)
             throw new ArgumentOutOfRangeException(nameof(baseFare), "Base fare cannot be negative.");
@@ -62,7 +64,7 @@ public class FareCalculator : IFareCalculator
             PricePerPassenger: perPassenger,
             Total: Round(perPassenger * passengerCount));
     }
-
+///<summary>  check if it is peak or offpeak </summary>
     public static TimeBand GetTimeBand(DateTime departureAt)
     {
         if (departureAt.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)

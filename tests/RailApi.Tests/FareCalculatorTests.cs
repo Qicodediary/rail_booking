@@ -90,6 +90,14 @@ public class FareCalculatorTests
         result.PricePerPassenger.Should().Be(50.00m);
         result.Total.Should().Be(150.00m);
     }
+    [Fact]
+    public void Infant_passengers_are_free()
+    {
+        var departure = Weekday(8);
+        var result = _calculator.Calculate(100m, departure, departure.AddDays(-1), 2, false, infantCount: 3);
+
+        result.Total.Should().Be(200.00m);
+    }
 
     [Fact]
     public void Fare_never_falls_below_the_minimum()
