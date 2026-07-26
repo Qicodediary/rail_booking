@@ -8,3 +8,4 @@ appsettings.*.local.json
 .DS_Store
 .DS_Store
 dotnet-install.sh
+.DS_Store
