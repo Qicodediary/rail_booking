@@ -75,6 +75,78 @@ public class BookingServiceTests : IDisposable
         var booking =await sut.CreateAsync(request);
         booking.TotalPrice.Should().Be(200.00m);
     }
+    // Add another test to check if cancellation works correctly
+    [Fact]
+    public async Task cancell_morethan_24h_before_departure()
+    {
+        var sut = CreateSut();
+        // creat a booking first
+        var request = new CreateBookingRequest(
+            ServiceCode: "BRIPAD0800",
+            TravelDate: new DateOnly(2026, 7, 27),
+            PassengerName: "William Smith",
+            PassengerCount: 2,
+            HasRailcard: false,
+            InfantCount: 3
+        );
+        var booking = await sut.CreateAsync(request);
+
+        // now cancelthe booking
+        var cancelled = await sut.CancelAsync(booking.Reference);
+        cancelled.Status.Should().Be(BookingStatus.Cancelled);
+        cancelled.RefundAmount.Should().Be(booking.TotalPrice);
+    }
+
+    [Fact]
+        public async Task cancell_within_24h_before_departure()
+    {
+        var sut = CreateSut();
+        // creat a booking first
+        var request = new CreateBookingRequest(
+            ServiceCode: "BRIPAD0800",
+            TravelDate: new DateOnly(2026, 7, 25),
+            PassengerName: "William Smith",
+            PassengerCount: 2,
+            HasRailcard: false,
+            InfantCount: 3
+        );
+        var booking = await sut.CreateAsync(request);
+
+        // now cancelthe booking
+        var cancelled = await sut.CancelAsync(booking.Reference);
+        cancelled.Status.Should().Be(BookingStatus.Cancelled);
+        cancelled.RefundAmount.Should().Be(0.00m);
+    }
+
+    [Fact]
+        public async Task cancell_after_departure()
+    {
+        var sut = CreateSut();
+        // creat a booking first
+        var request = new CreateBookingRequest(
+            ServiceCode: "BRIPAD0800",
+            TravelDate: new DateOnly(2026, 7, 25),
+            PassengerName: "William Smith",
+            PassengerCount: 2,
+            HasRailcard: false,
+            InfantCount: 3
+        );
+        var booking = await sut.CreateAsync(request);
+
+
+        // build a fake service passed the departure time 
+        var laterSut= new BookingService(
+            _db,
+            new FareCalculator(),
+            NullLogger<BookingService>.Instance,
+            new FixedTimeProvider(new DateTime(2026, 7, 25, 10, 0,0))
+        );
+
+        // now cancel the booking
+        var act = async () =>await laterSut.CancelAsync(booking.Reference); // wrap the cancellation to act 
+        await act.Should().ThrowAsync<BookingException>();
+    }
+
 
 
     public void Dispose()
