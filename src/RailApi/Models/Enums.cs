@@ -12,3 +12,9 @@ public enum TimeBand
     Peak = 0,
     OffPeak = 1
 }
+
+public enum BookingStatus
+{
+    Active = 0,
+    Cancelled = 1
+}

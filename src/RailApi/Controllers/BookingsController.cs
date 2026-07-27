@@ -43,4 +43,29 @@ public class BookingsController(IBookingService bookings) : ControllerBase
         var booking = await bookings.GetByReferenceAsync(reference, ct);
         return booking is null ? NotFound() : Ok(booking);
     }
+    /// <summary> cancels a booking by its reference. </summary>
+    [HttpPost("{reference}/cancel")]
+    [ProducesResponseType<BookingDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status408RequestTimeout)]
+    public async Task<ActionResult<BookingDto>> Cancel(String reference, CancellationToken ct)
+    {
+        try
+        {
+            var booking = await bookings.CancelAsync(reference, ct);
+            return Ok(booking);
+        }
+        catch (BookingException ex)
+        {
+            return BadRequest( new ProblemDetails
+            {
+                Title ="Cancellation rejected",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+    }
+
+
+    
 }

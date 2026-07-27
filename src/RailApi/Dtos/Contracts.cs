@@ -43,4 +43,6 @@ public record BookingDto(
     string PassengerName,
     int PassengerCount,
     decimal TotalPrice,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    BookingStatus Status,
+    decimal RefundAmount);

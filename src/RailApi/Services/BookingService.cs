@@ -10,6 +10,7 @@ public interface IBookingService
 {
     Task<BookingDto> CreateAsync(CreateBookingRequest request, CancellationToken ct = default);
     Task<BookingDto?> GetByReferenceAsync(string reference, CancellationToken ct = default);
+    Task<BookingDto> CancelAsync(string reference, CancellationToken ct = default);
 }
 
 /// <summary>Thrown for rule violations the caller can fix — maps to a 4xx, not a 500.</summary>
@@ -28,11 +29,11 @@ public class BookingService(
         if (request.PassengerCount < 1)
             throw new BookingException("At least one passenger is required.");
 
-        var service = await db.TrainServices
-            .Include(s => s.Origin)
+        var service = await db.TrainServices // check database can take a long time, so make sure use await to avoid blocking the thread
+            .Include(s => s.Origin) //Id is number so need to obtain the orign station's all details
             .Include(s => s.Destination)
-            .FirstOrDefaultAsync(s => s.ServiceCode == request.ServiceCode, ct)
-            ?? throw new BookingException($"Unknown service '{request.ServiceCode}'.");
+            .FirstOrDefaultAsync(s => s.ServiceCode == request.ServiceCode, ct) // return the first service whose ServiceCode matches the request, if not return null
+            ?? throw new BookingException($"Unknown service '{request.ServiceCode}'."); // ?? : if the query found a service, use it; if null, throw an exception (booking stops here)
 
         if (service.Status == ServiceStatus.Cancelled)
             throw new BookingException("This service has been cancelled.");
@@ -45,7 +46,7 @@ public class BookingService(
 
         // Serialisable transaction so two concurrent bookings cannot oversell the last seats.
         await using var tx = await db.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable, ct);
+            System.Data.IsolationLevel.Serializable, ct); // using ensures the transection is disposed properly whether the code succeds or throws, it commits or rolls bank and releases the lock qutomatically
 
         var seatsTaken = await db.Bookings
             .Where(b => b.TrainServiceId == service.Id && b.TravelDate == request.TravelDate)
@@ -84,12 +85,44 @@ public class BookingService(
     public async Task<BookingDto?> GetByReferenceAsync(string reference, CancellationToken ct = default)
     {
         var booking = await db.Bookings
-            .AsNoTracking()
+            .AsNoTracking() // read only, no changes
             .Include(b => b.TrainService).ThenInclude(s => s.Origin)
             .Include(b => b.TrainService).ThenInclude(s => s.Destination)
             .FirstOrDefaultAsync(b => b.Reference == reference.ToUpperInvariant(), ct);
 
         return booking is null ? null : ToDto(booking, booking.TrainService);
+    }
+
+    public async Task<BookingDto> CancelAsync(string reference, CancellationToken ct = default)
+    { 
+        // 1. find the booking by reference
+        var booking = await db.Bookings
+            .Include(b => b.TrainService).ThenInclude(s => s.Origin)
+            .Include(b => b.TrainService).ThenInclude(s => s.Destination)
+            .FirstOrDefaultAsync(b => b.Reference == reference.ToUpperInvariant(), ct)
+            ?? throw new BookingException($"Booking '{reference}' not found.");
+
+        // 2. find the train, and get the departure time
+        var departureAt = booking.TravelDate.ToDateTime(booking.TrainService.DepartureTime);
+        var now = clock.GetUtcNow().DateTime;
+
+        // 3. check if this booking can be cancelled 
+        if (departureAt < now)
+            throw new BookingException("This service has already departed, so the booking cannot be cancelled.");
+
+        var TUntilDeparture = departureAt - now;
+        decimal refund;
+        if (TUntilDeparture.TotalHours > 24)
+            refund = booking.TotalPrice;
+        else
+            refund = 0m;
+
+
+        // 4. update the booking status 
+        booking.Status = BookingStatus.Cancelled;
+        booking.RefoundAmount = refund;
+        await db.SaveChangesAsync(ct); // save to database
+        return ToDto(booking, booking.TrainService);
     }
 
     private static BookingDto ToDto(Booking b, TrainService s) => new(
@@ -102,14 +135,16 @@ public class BookingService(
         PassengerName: b.PassengerName,
         PassengerCount: b.PassengerCount,
         TotalPrice: b.TotalPrice,
-        CreatedAt: b.CreatedAt);
+        CreatedAt: b.CreatedAt,
+        Status: b.Status,
+        RefundAmount: b.RefoundAmount);
 
     private async Task<string> GenerateUniqueReferenceAsync(CancellationToken ct)
     {
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var reference = "TL" + RandomNumberGenerator.GetString(ReferenceAlphabet, 6);
-            if (!await db.Bookings.AnyAsync(b => b.Reference == reference, ct))
+            if (await db.Bookings.AllAsync(b => b.Reference != reference, ct))
                 return reference;
         }
 

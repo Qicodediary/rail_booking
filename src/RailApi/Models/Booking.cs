@@ -14,8 +14,10 @@ public class Booking
 
     public required string PassengerName { get; set; }
     public int PassengerCount { get; set; }
-    public bool HasRailcard { get; set; }
+    public bool HasRailcard { get; set; } // default false
 
     public decimal TotalPrice { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public BookingStatus Status {get; set;} = BookingStatus.Active;
+    public decimal RefoundAmount {get; set;} // default 0 
 }
