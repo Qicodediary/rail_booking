@@ -135,15 +135,11 @@ pipeline such as ELK expects to ingest.
 
 **Schema is managed with EF Core migrations.** The database schema is managed with EF Core migrations, applied automatically on startup via `Database.Migrate()`. Schema changes (such as adding a column) are captured as migrations and applied to the existing database without data loss, rather than recreating it.
 
-**Cancellation applies a time-based refund policy.** Cancelling more than 24 hours before
-departure gives a full refund; within 24 hours the booking is cancelled with no refund;
-after departure cancellation is rejected. The booking keeps a status and refund amount
-rather than being deleted, so the record is preserved.
+**Cancellation applies a time-based refund policy.** Cancelling more than 24 hours before departure gives a full refund; within 24 hours the booking is cancelled with no refund; after departure cancellation is rejected. The booking keeps a status and refund amount rather than being deleted, so the record is preserved.
 
-**Infants travel free and do not occupy a seat.** The fare is calculated on the adult
-passenger count only; infants are excluded from pricing and availability. This models lap
-travel; a production system might add an option for infants to occupy a seat.
+**Infants travel free and do not occupy a seat.** The fare is calculated on the adult passenger count only; infants are excluded from pricing and availability. This models lap travel; a production system might add an option for infants to occupy a seat.
 
+**First class costs a fixed supplement added before discounts.** Selecting first class adds £50 to the base fare, which is then subject to the same time-band and railcard discounts as standard fare. The seat class is stored on the booking.
 
 ---
 
