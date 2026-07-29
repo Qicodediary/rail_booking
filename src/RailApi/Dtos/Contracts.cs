@@ -31,7 +31,8 @@ public record CreateBookingRequest(
     string PassengerName,
     int PassengerCount,
     bool HasRailcard,
-    int InfantCount=0);
+    int InfantCount=0,
+    SeatClass SeatClass=SeatClass.Standard);
 
 public record BookingDto(
     string Reference,
@@ -45,4 +46,5 @@ public record BookingDto(
     decimal TotalPrice,
     DateTimeOffset CreatedAt,
     BookingStatus Status,
-    decimal RefundAmount);
+    decimal RefundAmount,
+    SeatClass SeatClass);

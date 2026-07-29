@@ -57,7 +57,7 @@ public class BookingService(
             throw new BookingException($"Only {seatsRemaining} seat(s) left on this service.");
 
         var fare = fares.Calculate(
-            service.BaseFare, departureAt, now, request.PassengerCount, request.HasRailcard,request.InfantCount);
+            service.BaseFare, departureAt, now, request.PassengerCount, request.HasRailcard, request.InfantCount, request.SeatClass);
 
         var booking = new Booking
         {
@@ -68,7 +68,8 @@ public class BookingService(
             PassengerCount = request.PassengerCount,
             HasRailcard = request.HasRailcard,
             TotalPrice = fare.Total,
-            CreatedAt = clock.GetUtcNow()
+            CreatedAt = clock.GetUtcNow(),
+            SeatClass = request.SeatClass,
         };
 
         db.Bookings.Add(booking);
@@ -137,7 +138,8 @@ public class BookingService(
         TotalPrice: b.TotalPrice,
         CreatedAt: b.CreatedAt,
         Status: b.Status,
-        RefundAmount: b.RefoundAmount);
+        RefundAmount: b.RefoundAmount,
+        SeatClass: b.SeatClass);
 
     private async Task<string> GenerateUniqueReferenceAsync(CancellationToken ct)
     {

@@ -75,6 +75,26 @@ public class BookingServiceTests : IDisposable
         var booking =await sut.CreateAsync(request);
         booking.TotalPrice.Should().Be(200.00m);
     }
+
+    [Fact]
+    public async Task booking_first_calss()
+    {
+        var sut = CreateSut();
+        var request = new CreateBookingRequest(
+            ServiceCode: "BRIPAD0800",
+            TravelDate: new DateOnly(2026, 7, 31),
+            PassengerName: "William Smith",
+            PassengerCount: 1,
+            HasRailcard: false,
+            InfantCount: 0,
+            SeatClass: SeatClass.First
+        );
+        var booking =await sut.CreateAsync(request);
+        booking.TotalPrice.Should().Be(150.00m);
+        booking.SeatClass.Should().Be(SeatClass.First);
+    }
+
+
     // Add another test to check if cancellation works correctly
     [Fact]
     public async Task cancell_morethan_24h_before_departure()
