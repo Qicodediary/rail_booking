@@ -11,7 +11,8 @@ public interface IFareCalculator
         DateTime bookedAt,
         int passengerCount,
         bool hasRailcard,
-        int infantCount = 0);
+        int infantCount = 0,
+        SeatClass seatClass =SeatClass.Standard);
 }
 
 /// <summary>
@@ -26,6 +27,8 @@ public class FareCalculator : IFareCalculator
     public const decimal RailcardMultiplier = 2m / 3m;      // one third off
     public const decimal MinimumFare = 1.00m;
 
+    public const decimal FirstClassSupplement = 50.00m;
+
     private static readonly TimeOnly MorningPeakStart = new(6, 30);
     private static readonly TimeOnly MorningPeakEnd = new(9, 30);
     private static readonly TimeOnly EveningPeakStart = new(16, 0);
@@ -37,7 +40,8 @@ public class FareCalculator : IFareCalculator
         DateTime bookedAt,
         int passengerCount,
         bool hasRailcard,
-        int infantCount = 0)
+        int infantCount = 0,
+        SeatClass seatClass = SeatClass.Standard)
     {
         if (baseFare < 0)
             throw new ArgumentOutOfRangeException(nameof(baseFare), "Base fare cannot be negative.");
@@ -46,8 +50,9 @@ public class FareCalculator : IFareCalculator
         if (bookedAt > departureAt)
             throw new ArgumentException("Cannot book a service that has already departed.", nameof(bookedAt));
 
+        var effectiveBaseFare = seatClass == SeatClass.First ? baseFare + FirstClassSupplement : baseFare;
         var band = GetTimeBand(departureAt);
-        var price = band == TimeBand.Peak ? baseFare : baseFare * OffPeakMultiplier;
+        var price = band == TimeBand.Peak ? effectiveBaseFare : effectiveBaseFare * OffPeakMultiplier;
 
         var advance = GetAdvanceMultiplier(departureAt, bookedAt);
         price *= advance;

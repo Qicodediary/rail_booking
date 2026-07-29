@@ -100,6 +100,24 @@ public class FareCalculatorTests
     }
 
     [Fact]
+    public void First_class_passengers_pay_a_supplement()
+    {
+        var departure = Weekday(8);// weekday 8 am , original fare 
+        var result = _calculator.Calculate(100m, departure, departure.AddDays(-1), 1, false, infantCount: 0, seatClass: SeatClass.First);
+                                     
+        result.Total.Should().Be(150.00m);
+    }
+
+    [Fact]
+    public void First_class_passengers_pay_a_supplement_offpeak()
+    {
+        var departure = Weekday(11);// weekday 8 am , original fare 
+        var result = _calculator.Calculate(100m, departure, departure.AddDays(-1), 1, false, infantCount: 0, seatClass: SeatClass.First);
+                                     
+        result.Total.Should().Be(105.00m);
+    }
+
+    [Fact]
     public void Fare_never_falls_below_the_minimum()
     {
         var departure = Weekday(12);

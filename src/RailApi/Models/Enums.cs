@@ -18,3 +18,9 @@ public enum BookingStatus
     Active = 0,
     Cancelled = 1
 }
+
+public enum SeatClass
+{
+    Standard = 0,
+    First = 1
+}
