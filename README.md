@@ -43,6 +43,7 @@ That is what makes the pricing rules cheap to test exhaustively.
 | `GET` | `/api/stations?search=` | List / filter stations |
 | `GET` | `/api/journeys?from=EUS&to=CAR&date=2026-08-05&railcard=false` | Search services with fares and seat availability |
 | `POST` | `/api/bookings` | Book seats, returns a booking reference |
+| `POST` | `/api/bookings/{reference}/cancel` | Cancel a booking, applying the refund policy.
 | `GET` | `/api/bookings/{reference}` | Retrieve a booking |
 | `GET` | `/health` | Liveness probe |
 
@@ -133,6 +134,15 @@ dependency like any other and tests substitute a fixed one.
 pipeline such as ELK expects to ingest.
 
 **Schema is managed with EF Core migrations.** The database schema is managed with EF Core migrations, applied automatically on startup via `Database.Migrate()`. Schema changes (such as adding a column) are captured as migrations and applied to the existing database without data loss, rather than recreating it.
+
+**Cancellation applies a time-based refund policy.** Cancelling more than 24 hours before
+departure gives a full refund; within 24 hours the booking is cancelled with no refund;
+after departure cancellation is rejected. The booking keeps a status and refund amount
+rather than being deleted, so the record is preserved.
+
+**Infants travel free and do not occupy a seat.** The fare is calculated on the adult
+passenger count only; infants are excluded from pricing and availability. This models lap
+travel; a production system might add an option for infants to occupy a seat.
 
 
 ---
