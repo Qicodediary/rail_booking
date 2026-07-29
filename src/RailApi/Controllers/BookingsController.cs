@@ -65,6 +65,18 @@ public class BookingsController(IBookingService bookings) : ControllerBase
             });
         }
     }
+    /// <summary>Lists bookings with pagination, newest first.</summary>
+    [HttpGet]
+    [ProducesResponseType<PagedResult<BookingDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<BookingDto>>> GetPaged(
+        int page = 1, int pageSize = 10, CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+        var result = await bookings.GetPagedAsync(page, pageSize, ct);
+        return Ok(result);
+    }
 
 
     

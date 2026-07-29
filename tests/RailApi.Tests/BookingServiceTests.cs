@@ -175,4 +175,31 @@ public class BookingServiceTests : IDisposable
         _connection.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    [Fact]
+    public async Task Paged_query_returns_correct_page_and_total()
+    {
+        var sut = CreateSut();
+
+        // make 10 bookings
+        for (var i = 0; i < 10; i++)
+        {
+            await sut.CreateAsync(new CreateBookingRequest(
+                ServiceCode: "BRIPAD0800",
+                TravelDate: new DateOnly(2026, 7, 29),
+                PassengerName: $"Passenger {i}",
+                PassengerCount: 1,
+                HasRailcard: false,
+                InfantCount: 0,
+                SeatClass: SeatClass.Standard));
+        }
+
+        // check the first page
+        var page1 = await sut.GetPagedAsync(page: 1, pageSize: 2);
+
+        page1.Items.Should().HaveCount(2);      // this page has 2
+        page1.TotalCount.Should().Be(10);         //total should be 10
+        page1.TotalPages.Should().Be(5);         // 10/2 = 5 pages
+        page1.Page.Should().Be(1);
+    }
 }

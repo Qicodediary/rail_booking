@@ -11,6 +11,7 @@ public interface IBookingService
     Task<BookingDto> CreateAsync(CreateBookingRequest request, CancellationToken ct = default);
     Task<BookingDto?> GetByReferenceAsync(string reference, CancellationToken ct = default);
     Task<BookingDto> CancelAsync(string reference, CancellationToken ct = default);
+    Task<PagedResult<BookingDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default);
 }
 
 /// <summary>Thrown for rule violations the caller can fix — maps to a 4xx, not a 500.</summary>
@@ -151,5 +152,21 @@ public class BookingService(
         }
 
         throw new InvalidOperationException("Could not allocate a unique booking reference.");
+    }
+    public async Task<PagedResult<BookingDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default)
+    {
+        var totalCount = await db.Bookings.CountAsync(ct);
+        var bookings = await db.Bookings
+            .AsNoTracking()
+            .Include(b => b.TrainService).ThenInclude(s => s.Origin)
+            .Include(b => b.TrainService).ThenInclude(s => s.Destination)
+            .OrderByDescending(b => b.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+        var items = bookings.Select(b => ToDto(b, b.TrainService)).ToList();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        return new PagedResult<BookingDto>(items, page, pageSize, totalCount, totalPages);
+  
     }
 }
