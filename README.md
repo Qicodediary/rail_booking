@@ -132,14 +132,14 @@ dependency like any other and tests substitute a fixed one.
 **Logging is structured.** Serilog writes compact JSON to stdout, which is what a log
 pipeline such as ELK expects to ingest.
 
+**Schema is managed with EF Core migrations.** The database schema is managed with EF Core migrations, applied automatically on startup via `Database.Migrate()`. Schema changes (such as adding a column) are captured as migrations and applied to the existing database without data loss, rather than recreating it.
+
+
 ---
 
 ## What I would add before calling this production-ready
 
-- **EF migrations instead of `EnsureCreated`.** The seeder currently creates the schema
-  directly, which is fine for a demo but gives no upgrade path. Real deployment would use
-  `dotnet ef migrations add Initial` and `Database.Migrate()` on startup, or a separate
-  migration step in the pipeline.
+
 - **Authentication and authorisation** on the booking endpoints, and rate limiting on search.
 - **Idempotency keys** on `POST /api/bookings`, so a client retry after a timeout cannot
   produce a duplicate booking.

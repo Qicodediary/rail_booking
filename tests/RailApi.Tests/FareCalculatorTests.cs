@@ -93,9 +93,9 @@ public class FareCalculatorTests
     [Fact]
     public void Infant_passengers_are_free()
     {
-        var departure = Weekday(8);
+        var departure = Weekday(8);// weekday 8 am , original fare 
         var result = _calculator.Calculate(100m, departure, departure.AddDays(-1), 2, false, infantCount: 3);
-
+                                      // baseFare, departure 8am, day 1 before departure, passagercount , if having railcard, infantCount is 3
         result.Total.Should().Be(200.00m);
     }
 

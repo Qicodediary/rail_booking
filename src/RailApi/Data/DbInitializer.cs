@@ -7,9 +7,9 @@ public static class DbInitializer
 {
     public static async Task InitialiseAsync(RailDbContext db, CancellationToken ct = default)
     {
-        // For a demo this is fine. In a real service you would commit EF migrations
-        // and call db.Database.MigrateAsync() here instead — see README.
-        await db.Database.EnsureCreatedAsync(ct);
+  
+        // use db.Database.MigrateAsync() here to allow the database to be created and migrated 
+        await db.Database.MigrateAsync(ct);
 
         if (await db.Stations.AnyAsync(ct)) return;
 
